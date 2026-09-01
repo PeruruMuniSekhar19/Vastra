@@ -7,7 +7,6 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Poppins', sans-serif; background: var(--beige); color: var(--black); }
 
-/* NAVBAR */
 .navbar { display: flex; justify-content: space-between; align-items: center; padding: 18px 50px; background: var(--white); position: sticky; top: 0; }
 .logo { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 600; letter-spacing: 2px; }
 .logo span { display: block; font-size: 10px; letter-spacing: 4px; font-family: 'Poppins'; font-weight: 300; }
@@ -16,7 +15,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--beige); color: var(
 .btn-login { border: 1px solid var(--black); padding: 6px 18px; }
 .btn-login:hover { background: var(--black); color: var(--white); }
 
-/* HERO */
 .hero { display: flex; align-items: center; justify-content: space-between; padding: 60px 80px; }
 .hero-text h4 { letter-spacing: 4px; font-size: 12px; color: var(--gold); margin-bottom: 15px; }
 .hero-text h1 { font-family: 'Playfair Display'; font-size: 55px; line-height: 1.1; margin-bottom: 15px; }
@@ -24,7 +22,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--beige); color: var(
 .btn-gold { background: var(--gold); color: var(--white); padding: 12px 30px; text-decoration: none; font-size: 14px; letter-spacing: 1px; }
 .hero-img img { width: 700px; height: 500px; object-fit: cover; }
 
-/* PRODUCTS */
 .section { padding: 60px 80px; }
 .section-title { font-family: 'Playfair Display'; font-size: 32px; margin-bottom: 30px; text-align: center; }
 .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px; }
@@ -35,7 +32,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--beige); color: var(
 
 footer { text-align: center; padding: 30px; background: var(--black); color: var(--white); font-size: 13px; margin-top: 40px; }
 
-/* MOBILE */
 @media(max-width: 768px) {
   .hero { flex-direction: column; padding: 30px; }
   .product-grid { grid-template-columns: repeat(2, 1fr); }

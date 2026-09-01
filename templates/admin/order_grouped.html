@@ -14,7 +14,6 @@
         <div style="flex:1; min-width:280px;">
           <b style="font-family:monospace; background:#fff3cd; padding:3px 8px; border-radius:5px;">Txn: {{ txn }}</b>
           
-          <!-- ✅ RETURN STATUS BADGE ADDED -->
           {% if data.return_request %}
             {% if data.return_request.status == 'Requested' %}
               <span style="background:#ff9800; color:white; padding:3px 10px; border-radius:12px; font-size:12px; margin-left:8px; font-weight:bold;">🔄 Return Requested</span>
@@ -29,7 +28,6 @@
           📍 {{ main_order.address }} - <b>{{ main_order.pincode }}</b><br>
           <small style="color:#666;">{{ main_order.created_at|date:"d M Y h:i A" }} | {{ main_order.payment_method }} {% if main_order.transaction_id %}| UTR: {{ main_order.transaction_id }}{% endif %}</small>
 
-          <!-- ✅ RETURN REASON BOX -->
           {% if data.return_request %}
           <div style="margin-top:12px; background:#fff3cd; border:1px solid #ffc107; padding:10px; border-radius:8px;">
             <b style="color:#856404; font-size:13px;">🔄 Return Reason:</b><br>

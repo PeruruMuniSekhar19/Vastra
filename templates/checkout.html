@@ -17,7 +17,6 @@
 <nav class="navbar" style="padding:15px; display:flex; justify-content:space-between;"><div class="logo"><b>VASTRA</b> <span>The Fashion Store</span></div><div><a href="{% url 'cart' %}">Back to Cart</a></div></nav>
 
 <section class="checkout-wrap">
-<!-- LEFT - Shipping -->
 <div style="flex:2; background:#fff; padding:30px; border:1px solid #eee; border-radius:8px;">
 <h2 style="font-family:'Playfair Display'">Shipping Details</h2>
 
@@ -46,7 +45,6 @@
 </form>
 </div>
 
-<!-- RIGHT - Order Summary -->
 <div style="flex:1; background:#fff; padding:25px; height:fit-content; border:1px solid #eee; border-radius:8px;">
 <h3>Order Summary</h3>
 <div id="order_items"></div>
@@ -112,7 +110,7 @@ document.getElementById('checkoutForm').addEventListener('submit', function(e){
   if(cart.length==0){ e.preventDefault(); alert("Cart empty!"); window.location.href="/shop/"; return false; }
   document.getElementById('cart_json').value = JSON.stringify(cart);
   console.log("Sending to Django:", cart);
-  // Clear after submit
+
   setTimeout(()=>{ 
     localStorage.removeItem('selectedCart'); 
     localStorage.removeItem('vastraCart');
@@ -121,9 +119,7 @@ document.getElementById('checkoutForm').addEventListener('submit', function(e){
   }, 1000);
 });
 
-// If no cart, redirect
 if(cart.length==0){
-  // document.getElementById('order_items').innerHTML = '<p style="color:red;">No items! Go to <a href="/shop/">Shop</a></p>';
 }
 </script>
 

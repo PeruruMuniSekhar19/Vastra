@@ -7,13 +7,11 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY - Hosting ki important
 SECRET_KEY = 'django-insecure-h=bd47b27r-3y(%ccstartbld1x3*_gh&8axni$17qtlw-ow=i'
 DEBUG = False 
 
-ALLOWED_HOSTS = ['*']  # Free hosting lo * pettali, tarwata domain vasthe marchachu
+ALLOWED_HOSTS = ['*']  
 
-# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -26,7 +24,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Static files kosam - NEW
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -55,7 +53,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Database - Local MySQL (PythonAnywhere lo idi maruthundi)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -67,7 +64,6 @@ DATABASES = {
     }
 }
 
-# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
@@ -80,10 +76,9 @@ TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = False
 
-# Static files - HOSTING KI CHALA IMPORTANT MUNI!
 STATIC_URL = 'static/'
 STATICFILES_DIRS=[BASE_DIR/'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # NEW - Hosting kosam
+STATIC_ROOT = BASE_DIR / 'staticfiles' 
 
 MEDIA_URL='/media/'
 MEDIA_ROOT=BASE_DIR/'media'

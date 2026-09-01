@@ -106,7 +106,7 @@ def checkout(request):
         return redirect(f"/order_success/?txn={txn}")
     return render(request, 'checkout.html')
 
-# ===== 100% FIXED MUNI - NO ERROR MUNI =====
+
 def order_success(request):
     txn = request.GET.get('txn')
     order = Order.objects.filter(transaction_id=txn).prefetch_related('items__product').first()
@@ -117,7 +117,6 @@ def order_success(request):
     total_qty = order.quantity
     total_paid = order.total_amount
 
-    # Cart clear kosam - SAFE CODE MUNI
     ordered_list = []
     for it in items_qs:
         if hasattr(it, 'product') and it.product:
@@ -132,39 +131,8 @@ def order_success(request):
         'ordered_ids': json.dumps(ordered_list)
     })
 
-# def orders(request):
-#     all_orders = Order.objects.all().order_by('-created_at').prefetch_related('items__product')
-#     grouped_dict = {}
-#     for o in all_orders:
-#         txn = o.transaction_id or f"ORD-{o.id}"
-#         if txn not in grouped_dict:
-#             grouped_dict[txn] = {'txn_id': txn, 'first_order': o, 'items': [], 'total': 0, 'total_qty': 0}
-#         if o.items.exists():
-#             if not grouped_dict[txn]['items'] or isinstance(grouped_dict[txn]['items'][0], Order):
-#                 grouped_dict[txn]['items'] = list(o.items.all())
-#                 grouped_dict[txn]['total'] = sum(i.price * i.quantity for i in o.items.all())
-#                 grouped_dict[txn]['total_qty'] = sum(i.quantity for i in o.items.all())
-#                 grouped_dict[txn]['first_order'] = o
-#         else:
-#             if o not in grouped_dict[txn]['items']:
-#                 if not grouped_dict[txn]['items'] or isinstance(grouped_dict[txn]['items'][0], Order):
-#                     grouped_dict[txn]['items'].append(o)
-#                     grouped_dict[txn]['total'] += o.total_amount or 0
-#                     grouped_dict[txn]['total_qty'] += o.quantity or 0
-#     customer_id = request.session.get('customer_id')
-#     reviewed_ids = []
-#     if customer_id:
-#         reviewed_ids = list(Review.objects.filter(user_id=customer_id).values_list('product_id', flat=True))  
-#         returned_ids = list(ReturnRequest.objects.values_list('order_group_id', flat=True))      
-#     grouped_orders = sorted(grouped_dict.values(), key=lambda x: x['first_order'].created_at, reverse=True)
-#     return render(request, 'my_orders.html', {
-#         'grouped': grouped_orders, 
-#         'reviewed_ids': reviewed_ids,
-#         'return_ids': returned_ids
-#     })
 
 def orders(request):
-    from.models import ReturnRequest # ensure import
 
     all_orders = Order.objects.all().order_by('-created_at').prefetch_related('items__product')
     grouped_dict = {}
@@ -180,13 +148,11 @@ def orders(request):
             grouped_dict[txn]['total'] = sum(i.price * i.quantity for i in items)
             grouped_dict[txn]['total_qty'] = sum(i.quantity for i in items)
         else:
-            # Old Order model
             if o not in grouped_dict[txn]['items']:
                 grouped_dict[txn]['items'].append(o)
                 grouped_dict[txn]['total'] += getattr(o, 'total_amount', 0) or 0
                 grouped_dict[txn]['total_qty'] += getattr(o, 'quantity', 0) or 1
 
-    # ✅ RETURN STATUS SYNC ADDED MUNI
     all_return_requests = {r.order_group_id: r for r in ReturnRequest.objects.all()}
 
     for txn_id, data in grouped_dict.items():
@@ -258,9 +224,7 @@ def contact(request):
 
 
 
-# ===== WISHLIST 100% FIXED MUNI =====
 def get_current_user_id(request):
-    # custom login support + django auth support
     if request.user.is_authenticated:
         return request.user.id
     return request.session.get('customer_id')
@@ -269,9 +233,7 @@ def wishlist(request):
     uid = get_current_user_id(request)
     if not uid:
         return redirect('login')
-    # Check both user_id fields
     items = Wishlist.objects.filter(user_id=uid).select_related('product')
-    # fallback if custom User model id is different
     if not items.exists():
         items = Wishlist.objects.filter(user__id=uid).select_related('product')
     return render(request, 'wishlist.html', {'items': items})
@@ -282,20 +244,17 @@ def wishlist_toggle(request, product_id):
         return JsonResponse({'status':'login_required'}, status=401)
     try:
         product = Product.objects.get(id=product_id)
-        # Custom user object get
         from .models import User as CustomUser
         user_obj = None
         try:
             user_obj = CustomUser.objects.get(id=uid)
         except:
-            # if auth user
             from django.contrib.auth.models import User as AuthUser
             try:
                 user_obj = AuthUser.objects.get(id=uid)
             except:
                 pass
         
-        # Direct filter with user_id to avoid FK issues
         wish = Wishlist.objects.filter(user_id=uid, product_id=product_id).first()
         if wish:
             wish.delete()
@@ -315,7 +274,6 @@ def add_to_wishlist(request, id):
 @login_required
 def remove_from_wishlist(request, id):
     uid = get_current_user_id(request)
-    # TYPO FIX MUNI - use_idr -> user_id
     Wishlist.objects.filter(user_id=uid, product_id=id).delete()
     return redirect('wishlist')
 
@@ -324,7 +282,6 @@ def logout_view(request):
     return redirect('home')
 
 
-# INVOICE PDF GENERATOR
 def download_invoice(request, txn_id):
     orders = Order.objects.filter(transaction_id=txn_id)
     if not orders.exists():
@@ -338,7 +295,6 @@ def download_invoice(request, txn_id):
     items = OrderItem.objects.filter(order__in=orders)
     total = first_order.total_amount or sum(i.price * i.quantity for i in items)
 
-    # --- PDF PREMIUM CODE ---
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="VASTRA_Invoice_{txn_id}.pdf"'
@@ -346,13 +302,11 @@ def download_invoice(request, txn_id):
     c = canvas.Canvas(response, pagesize=A4)
     w, h = A4
 
-    # COLORS
     BLACK = HexColor("#111111")
     GRAY = HexColor("#6B7280")
     LIGHT_GRAY = HexColor("#F3F4F6")
-    ORANGE = HexColor("#FF3F6C") # Myntra pink
+    ORANGE = HexColor("#FF3F6C")
 
-    # HEADER BG
     c.setFillColor(BLACK)
     c.rect(0, h-70, w, 70, fill=1, stroke=0)
     
@@ -365,7 +319,6 @@ def download_invoice(request, txn_id):
     c.setFont("Helvetica-Bold", 14)
     c.drawRightString(w-40, h-45, "TAX INVOICE")
 
-    # Invoice Info Box
     y = h-100
     c.setFillColor(BLACK)
     c.setFont("Helvetica-Bold", 10)
@@ -377,7 +330,6 @@ def download_invoice(request, txn_id):
     c.drawString(40, y-41, f"Payment: Cash On Delivery")
     c.drawString(40, y-54, f"Order Status: Delivered")
 
-    # Customer Box
     c.setFillColor(BLACK)
     c.setFont("Helvetica-Bold", 10)
     c.drawString(320, y, "Billed To:")
@@ -387,13 +339,11 @@ def download_invoice(request, txn_id):
     c.setFont("Helvetica", 9)
     c.setFillColor(GRAY)
     c.drawString(320, y-28, f"{first_order.phone}")
-    # Address wrap
     addr = f"{first_order.address}, {first_order.pincode}"
     c.drawString(320, y-41, addr[:45])
     if len(addr) > 45:
         c.drawString(320, y-54, addr[45:90])
 
-    # Seller Box
     y -= 80
     c.setFillColor(LIGHT_GRAY)
     c.rect(40, y-30, w-80, 30, fill=1, stroke=0)
@@ -401,7 +351,6 @@ def download_invoice(request, txn_id):
     c.setFont("Helvetica", 8)
     c.drawString(50, y-12, "Sold By: VASTRA Fashions Pvt Ltd, Tirupati, AP - 517501 | GSTIN: 37ABCDE1234F1Z5 | support@vastra.com")
 
-    # TABLE HEADER
     y -= 60
     c.setFillColor(BLACK)
     c.rect(40, y, w-80, 25, fill=1, stroke=0)
@@ -413,7 +362,6 @@ def download_invoice(request, txn_id):
     c.drawString(380, y+9, "RATE")
     c.drawString(470, y+9, "AMOUNT")
 
-    # TABLE ROWS
     y -= 20
     c.setFont("Helvetica", 9)
     for item in items:
@@ -421,8 +369,7 @@ def download_invoice(request, txn_id):
             c.showPage()
             y = h-80
         
-        # alternating row color
-        if items.filter(id=item.id).first() == item: # just for light color
+        if items.filter(id=item.id).first() == item: 
             pass
         if y % 40 == 0:
             c.setFillColor(HexColor("#FAFAFA"))
@@ -443,7 +390,6 @@ def download_invoice(request, txn_id):
         c.setStrokeColor(HexColor("#E5E7EB"))
         c.line(40, y+5, w-40, y+5)
 
-    # TOTAL SECTION
     y -= 30
     c.setStrokeColor(BLACK)
     c.line(350, y+15, w-40, y+15)
@@ -468,7 +414,6 @@ def download_invoice(request, txn_id):
     c.drawString(360, y+5, "TOTAL PAID")
     c.drawRightString(w-45, y+5, f"Rs. {total}")
 
-    # FOOTER
     c.setFillColor(GRAY)
     c.setFont("Helvetica", 8)
     c.drawString(40, 80, "This is a computer generated invoice. No signature required.")
@@ -509,7 +454,6 @@ def profile_view(request):
     msg = ""
 
     if request.method == 'POST':
-        # Profile Update
         if 'update_profile' in request.POST:
             customer.name = request.POST.get('name')
             customer.email = request.POST.get('email')
@@ -519,14 +463,12 @@ def profile_view(request):
             request.session['customer_name'] = customer.name
             msg = "Profile Updated Successfully! ✅"
 
-        # Password Update
         elif 'update_password' in request.POST:
             new_pass = request.POST.get('new_password')
             confirm_pass = request.POST.get('confirm_password')
             
             if new_pass == confirm_pass and len(new_pass) >= 4:
-                customer.password = new_pass # Nee model lo hashing lekunte
-                # Hashing unte: customer.set_password(new_pass) 
+                customer.password = new_pass 
                 customer.save()
                 msg = "Password Changed Successfully! 🔒"
             else:

@@ -97,7 +97,6 @@ class OrderAdmin(admin.ModelAdmin):
             groups[tid]['orders'].append(o)
             groups[tid]['group_total'] += o.total_amount
 
-        # ✅ RETURN REQUEST ADD CHESA MUNI
         for txn_id in groups.keys():
             return_req = ReturnRequest.objects.filter(order_group_id=txn_id).first()
             groups[txn_id]['return_request'] = return_req
@@ -130,7 +129,6 @@ class ReviewAdmin(admin.ModelAdmin):
     list_filter = ['rating']
     search_fields = ['product__name']
 
-# ✅ FINAL RETURN REQUEST ADMIN - MASS UPDATE
 @admin.register(ReturnRequest)
 class ReturnRequestAdmin(admin.ModelAdmin):
     list_display = ['order_group_id', 'reason', 'status']

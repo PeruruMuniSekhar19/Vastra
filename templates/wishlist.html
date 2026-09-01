@@ -111,7 +111,6 @@ function removeWish(pid){
   });
 }
 
-// Cart count
 try{
   let c = JSON.parse(localStorage.getItem('cart') || '{}');
   document.getElementById('cart-count').textContent = Object.keys(c).length;

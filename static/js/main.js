@@ -1,4 +1,3 @@
-// VASTRA - Search + Filter + Sort - FINAL
 function searchProducts(){
   let input = document.getElementById('searchInput');
   let filter = input.value.toLowerCase();
@@ -53,9 +52,6 @@ function sortProducts(type){
   cards.forEach(c=> grid.appendChild(c));
 }
 
-
-
-// Cart Count
 let cart = JSON.parse(localStorage.getItem('vastraCart') || '[]');
 let el = document.getElementById('cart-count');
 if(el) el.textContent = cart.length;
@@ -63,7 +59,6 @@ function toggleMenu(){
   let m=document.getElementById('mobileNav');
   m.style.display = (m.style.display==='flex') ? 'none' : 'flex';
 }
-// Show hamburger only on mobile
 function checkMobile(){
   let btn=document.getElementById('menuBtn');
   if(window.innerWidth < 768) btn.style.display='block';

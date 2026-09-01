@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 
-# 1. Categories Table
 class Category(models.Model):
     class Meta:
         verbose_name_plural = "Categories"
@@ -12,12 +11,11 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-# 2. Products Table
 class Product(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
-    price = models.IntegerField() # MRP - Original Price
-    discount_price = models.IntegerField(null=True, blank=True) # Final price after discount
+    price = models.IntegerField() 
+    discount_price = models.IntegerField(null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
     brand = models.CharField(max_length=100, default="VASTRA")
     size = models.CharField(max_length=100, default="S M L XL XXL FreeSize")
@@ -41,13 +39,13 @@ class Product(models.Model):
         return self.discount_price if self.discount_price and self.discount_price < self.price else self.price
 
     @property
-    def original_price(self): # Cart kosam easy ga
+    def original_price(self): 
         return self.price
 
     def __str__(self):
         return self.name
 
-# 3. Users Table
+
 class User(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
@@ -63,12 +61,10 @@ class User(models.Model):
     def __str__(self):
         return self.name
 
-# 4. Orders Table - Checkout Address
+
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    # product field vaddu Muni - OrderItem lo untundi
-    # product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
-    quantity = models.IntegerField(default=1) # Total qty for backward compat
+    quantity = models.IntegerField(default=1) 
     size = models.CharField(max_length=20, default='M')
     name = models.CharField(max_length=100)
     phone = models.CharField(max_length=15)
@@ -83,19 +79,18 @@ class Order(models.Model):
     shipped_at = models.DateTimeField(null=True, blank=True) 
 
     def save(self, *args, **kwargs):
-        # FIXED Muni - Delivered/Shipped time overwrite avvakunda
         if self.payment_status == 'Shipped' and self.shipped_at is None:
             self.shipped_at = timezone.now()
         if self.payment_status == 'Delivered' and self.delivered_at is None:
             self.delivered_at = timezone.now()
-            if self.shipped_at is None: # Delivered ayithe shipped kuda undali
+            if self.shipped_at is None: 
                 self.shipped_at = timezone.now()
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} - Rs.{self.total_amount} - {self.transaction_id} - {self.created_at.strftime('%d-%m-%Y %I:%M %p')}"
 
-# 5. ContactMessage
+
 class ContactMessage(models.Model):
     name = models.CharField(max_length=100)
     mail = models.EmailField()
@@ -104,19 +99,18 @@ class ContactMessage(models.Model):
     def __str__(self):
         return f"{self.name} - {self.mail} - {self.created_at.strftime('%d-%m-%Y %H:%M')}"
 
-# 6. OrderItem Table
+
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
     size = models.CharField(max_length=20, default='M')  
-    price = models.IntegerField(default=0) # Integer chesa Muni - Decimal kadu
+    price = models.IntegerField(default=0) 
 
     def __str__(self):
         return f"{self.product.name} - {self.size} x {self.quantity} - Rs.{self.price}"
 
 
-# 7. REVIEW MODEL
 class Review(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(User, on_delete=models.CASCADE,null=True,blank=True)
@@ -127,7 +121,7 @@ class Review(models.Model):
     def __str__(self):
         return f"{self.product.name} - {self.rating}"
 
-# 8. RETURN MODEL
+
 class ReturnRequest(models.Model):
     STATUS_CHOICES = [('Requested','Requested'),
                       ('Approved','Approved'),
@@ -145,7 +139,6 @@ class ReturnRequest(models.Model):
     def __str__(self):
         return f"{self.order_group_id} - {self.status}"    
 
-# Wishlist Model
 
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -153,7 +146,7 @@ class Wishlist(models.Model):
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'product')  # Oka product okasare
+        unique_together = ('user', 'product')  
 
     def __str__(self):
         return f"{self.user.username} - {self.product.name}"

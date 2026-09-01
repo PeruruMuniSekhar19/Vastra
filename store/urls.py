@@ -16,7 +16,6 @@ urlpatterns = [
     path('return/<int:order_id>/', views.request_return, name='request_return'),
     path('profile/', views.profile_view, name='profile'),
     
-    # WISHLIST - 100% FIXED MUNI
     path('wishlist/', views.wishlist, name='wishlist'),
     path('wishlist/toggle/<int:product_id>/', views.wishlist_toggle, name='wishlist_toggle'),
     path('add_to_wishlist/<int:id>/', views.add_to_wishlist, name='add_to_wishlist'),
