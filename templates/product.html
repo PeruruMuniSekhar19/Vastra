@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head><title>{{ product.name }} - VASTRA</title><link rel="stylesheet" href="{% static 'css/style.css' %}"></head>
+<body>
+<button id="menuBtn" onclick="toggleMenu()" style="display:none; font-size:22px; background:none; border:none; cursor:pointer;">☰</button>
+<nav class="navbar" style="display:flex; justify-content:space-between; padding:15px;"><b>VASTRA</b><div><a href="{% url 'home' %}">Home</a> | <a href="{% url 'shop' %}">Shop</a> | <a href="{% url 'wishlist' %}">Wishlist ❤️</a> | <a href="{% url 'cart' %}">Cart (<span id="cart-count">0</span>)</a></div></nav>
+
+<div id="mobileNav" style="display:none; flex-direction:column; background:white; padding:15px; border-top:1px solid #eee;">
+  <a href="{% url 'home' %}" style="padding:10px 0; text-decoration:none; color:black;">Home</a>
+  <a href="{% url 'shop' %}" style="padding:10px 0; text-decoration:none; color:black;">Shop</a>
+  <a href="{% url 'wishlist' %}" style="padding:10px 0; text-decoration:none; color:black;">Wishlist ❤️</a>
+  <a href="{% url 'cart' %}" style="padding:10px 0; text-decoration:none; color:black;">Cart 🛒 (<span class="cart-count">0</span>)</a>
+</div>
+
+<div id="product-detail" style="display:flex; gap:40px; padding:40px; max-width:1000px; margin:auto;">
+  <img id="p-img" src="{% static 'images/' %}{{ product.image }}" style="width:50%; height:500px; object-fit:cover; border-radius:10px;">
+  <div>
+    <h1 id="p-name">{{ product.name }}</h1>
+
+    {% if product.discount_price and product.discount_price < product.price %}
+      <p style="font-size:26px; color:#000; font-weight:bold;">₹{{ product.final_price }}
+        <small style="text-decoration:line-through; color:gray; font-size:16px;">₹{{ product.price }}</small>
+        <small style="color:#388e3c; font-size:16px; font-weight:bold;">{{ product.discount_percent }}% OFF</small>
+      </p>
+      <p style="color:#388e3c;">Inclusive of all taxes | Free Shipping</p>
+    {% else %}
+      <p id="p-price" style="font-size:24px; color:#C9A86A; font-weight:bold;">₹{{ product.price }}</p>
+    {% endif %}
+
+    <p>Premium Quality | Free Shipping | Tirupati Store</p>
+    <br>
+
+	<div style="display:flex; align-items:center; gap:12px; margin:15px 0;">
+      <b>Qty:</b>
+      <button onclick="changeQty(-1)" style="padding:6px 14px; border:1px solid #ccc;">-</button>
+      <span id="qty" style="min-width:30px; text-align:center; border:1px solid #ccc; padding:6px 12px;">1</span>
+      <button onclick="changeQty(1)" style="padding:6px 14px; border:1px solid #ccc;">+</button>
+      <button onclick="toggleWishlist()" id="wishBtn" style="margin-left:10px; background:white; border:1px solid #ccc; padding:6px 12px; border-radius:6px;">❤️ Wishlist</button>
+    </div>
+
+    <div id="notify" style="position:fixed; bottom:20px; right:20px; background:black; color:white; padding:12px 20px; border-radius:8px; display:none; z-index:9999;"></div>
+
+    <div style="margin:15px 0;">
+      <strong style="font-size:14px;">Select Size:</strong>
+      <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+        {% if 'saree' in product.name|lower %}
+        <button type="button" onclick="setSize('FreeSize',this)" style="border:1px solid #000; padding:6px 20px;background:black;color: white;cursor:pointer;border-radius:6px;">FreeSize</button>
+        {% else %}
+        <button type="button" onclick="setSize('S',this)" style="border:1px solid #000; padding:6px 14px; background:white; cursor:pointer; border-radius:6px;">S</button>
+        <button type="button" onclick="setSize('M',this)" style="border:1px solid #000; padding:6px 14px; background:black; color:white; cursor:pointer; border-radius:6px;">M</button>
+        <button type="button" onclick="setSize('L',this)" style="border:1px solid #000; padding:6px 14px; background:white; cursor:pointer; border-radius:6px;">L</button>
+        <button type="button" onclick="setSize('XL',this)" style="border:1px solid #000; padding:6px 14px; background:white; cursor:pointer; border-radius:6px;">XL</button>
+        <button type="button" onclick="setSize('XXL',this)" style="border:1px solid #000; padding:6px 14px; background:white; cursor:pointer; border-radius:6px;">XXL</button>
+        {% endif %}
+      </div>
+      <p style="font-size:12px; margin-top:6px;">Selected: <b id="selSize" style="color:red;">{% if 'saree' in product.name|lower %}FreeSize{% else %}M{% endif %}</b></p>
+    </div>
+
+    <!-- ADD TO CART BUTTON FIXED -->
+    <button id="add-btn" style="background:#ff3f6c; color:white; padding:14px 30px; border:none; border-radius:6px; font-weight:bold; width:100%; cursor:pointer; font-size:16px; margin-top:10px;">
+        🛒 ADD TO CART
+    </button>
+
+<div style="margin-top:30px; border-top:2px solid #f0f0f0; padding-top:20px;">
+    {% if review_count > 0 %}
+    <div style="background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:16px; border-radius:12px; border:1px solid #fcd34d; display:flex; align-items:center; gap:15px;">
+      <div style="font-size:32px; font-weight:bold;">{{ avg_rating }}</div>
+      <div>
+        <div style="font-size:20px; color:#FFA41C;">⭐⭐⭐⭐⭐</div>
+        <div style="font-size:13px; color:#555; margin-top:2px;">{{ review_count }} Verified Ratings • 100% Authentic</div>
+      </div>
+    </div>
+    {% endif %}
+    <h3 style="margin:20px 0 10px 0; font-size:16px;">Customer Reviews</h3>
+    {% for r in reviews %}
+    <div style="padding:14px; border:1px solid #eee; margin-top:10px; border-radius:10px; background:#fff;">
+      <div style="display:flex; justify-content:space-between;">
+        <span style="background:#038e00; color:white; padding:2px 8px; border-radius:4px; font-size:12px;">⭐ {{ r.rating }}</span>
+      </div>
+      <p style="margin:10px 0 5px 0; font-size:14px; color:#222;">{{ r.comment }}</p>
+      <small style="color:#888;">{{ r.user.username }} • {{ r.created_at|date:"d M Y" }} • Tirupati Store</small>
+    </div>
+    {% empty %}
+    <div style="text-align:center; padding:30px; border:1px dashed #ccc; border-radius:10px; margin-top:10px;">
+      <p style="font-size:40px; margin:0;">⭐</p>
+      <p style="color:#666;">No reviews yet</p>
+    </div>
+    {% endfor %}
+    <a href="{% url 'shop' %}" style="display:inline-block; margin-top:20px; text-decoration:none; color:#C9A86A; font-weight:bold;">← Back to Shop</a>
+</div>
+  </div>
+</div>
+
+<script src="{% static 'js/main.js' %}"></script>
+<script>
+let selectedQty = 1;
+let selectedSize = "{% if 'saree' in product.name|lower %}FreeSize{% else %}M{% endif %}";
+
+function setSize(s, btn){
+  selectedSize = s;
+  document.getElementById('selSize').innerText = s;
+  document.querySelectorAll('[onclick^="setSize"]').forEach(b=>{
+    b.style.background='white'; b.style.color='black';
+  });
+  btn.style.background='black'; btn.style.color='white';
+}
+
+function changeQty(n){
+  selectedQty += n;
+  if(selectedQty < 1) selectedQty = 1;
+  document.getElementById('qty').innerText = selectedQty;
+}
+
+document.getElementById('add-btn').addEventListener('click', function(){
+  if(!selectedSize){ alert("select Your Size!"); return; }
+  let pid = "{{ product.id }}";
+  let pname = "{{ product.name }}";
+  let pprice = "{{ product.final_price }}";
+  let origPrice = "{{ product.price }}";
+  let discount = "{{ product.discount_percent }}";
+  let pimg = "/static/images/{{ product.image }}";
+  let pkey = pid + "_" + selectedSize;
+
+  let cartObj = JSON.parse(localStorage.getItem('cart') || '{}');
+
+  if(cartObj[pkey]){
+    cartObj[pkey].qty += selectedQty;
+    cartObj[pkey].quantity = cartObj[pkey].qty;
+  } else {
+    cartObj[pkey] = {
+      id: pid, name: pname, price: pprice, original_price: origPrice, discount_percent: discount,
+      image: pimg, img: pimg, size: selectedSize, qty: selectedQty, quantity: selectedQty
+    };
+  }
+
+  let cartArr = Object.values(cartObj);
+  localStorage.setItem('cart', JSON.stringify(cartObj));
+  localStorage.setItem('vastraCart', JSON.stringify(cartArr));
+  localStorage.setItem('selectedCart', JSON.stringify(cartArr));
+  localStorage.setItem('vastraCheckout', JSON.stringify(cartArr));
+
+  showNotify(pname + " Added! Size: " + selectedSize + " | ₹" + pprice);
+  setTimeout(()=>{ window.location.href = "/cart/"; }, 600);
+});
+
+function showNotify(msg){
+  let n=document.getElementById('notify');
+  n.textContent=msg; n.style.display='block';
+  setTimeout(()=>n.style.display='none',2500);
+}
+function toggleWishlist(){
+  fetch("/wishlist/toggle/{{ product.id }}/")
+ .then(res=>res.json())
+ .then(data=>{
+    if(data.status === 'added') showNotify('Added to Wishlist ❤️');
+    else showNotify('Removed from Wishlist');
+  })
+ .catch(()=>{
+    let wid = "{{ product.id }}";
+    let w=JSON.parse(localStorage.getItem('wishlist')||'[]');
+    if(w.includes(wid)){ w=w.filter(x=>x!==wid); showNotify('Removed from Wishlist'); }
+    else { w.push(wid); showNotify('Added to Wishlist ❤️'); }
+    localStorage.setItem('wishlist', JSON.stringify(w));
+  });
+}
+let saved = localStorage.getItem("cartCount") || 0;
+let cEl=document.getElementById('cart-count');
+if(cEl) cEl.textContent=Object.values(JSON.parse(localStorage.getItem('cart')||'{}')).length || saved;
+</script>
+</body>
+</html>

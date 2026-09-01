@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About - VASTRA</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins&display=swap" rel="stylesheet">
+</head>
+<body style="font-family:Poppins, Arial; margin:0; background:#fdf6f3;">
+
+<nav class="navbar" style="display:flex; justify-content:space-between; padding:15px 30px; background:white; border-bottom:1px solid #eee;">
+<div class="logo"><b>VASTRA</b> <span style="font-size:11px; color:#C9A86A;">The Fashion Store</span></div>
+<div class="nav-links" style="display:flex; gap:20px;">
+<a href="{% url 'home' %}" style="text-decoration:none; color:black;">Home</a>
+<a href="{% url 'shop' %}" style="text-decoration:none; color:black;">Shop</a>
+<a href="{% url 'about' %}" class="active" style="font-weight:bold; color:#C9A86A;">About</a>
+<a href="{% url 'contact' %}" style="text-decoration:none; color:black;">Contact</a>
+<a href="{% url 'cart' %}" style="text-decoration:none; color:black;">Cart (<span id="cart-count">0</span>)</a>
+</div>
+</nav>
+
+<section style="padding:60px 80px; text-align:center;">
+<h1 style="font-family:'Playfair Display'; font-size:50px; margin:0;">We Weave Stories,<br>Not Just Clothes 🧵</h1>
+<p style="max-width:650px; margin:20px auto; color:#666; line-height:1.9; font-size:16px;">
+<b>VASTRA</b> started in <b>Tirupati</b> with a mission to bring premium ethnic & modern wear to India.<br>
+Every thread is chosen with care, every design tells a story. From our home to your wardrobe - Wear Your Tradition.
+</p>
+<div style="display:flex; justify-content:center; gap:30px; margin-top:40px; flex-wrap:wrap;">
+<div style="background:white; padding:25px; border-radius:12px; width:200px; box-shadow:0 4px 10px rgba(0,0,0,0.05);"><h2 style="color:#C9A86A; margin:0;">1000+</h2><p>Happy Customers</p></div>
+<div style="background:white; padding:25px; border-radius:12px; width:200px; box-shadow:0 4px 10px rgba(0,0,0,0.05);"><h2 style="color:#C9A86A; margin:0;">500+</h2><p>Premium Designs</p></div>
+<div style="background:white; padding:25px; border-radius:12px; width:200px; box-shadow:0 4px 10px rgba(0,0,0,0.05);"><h2 style="color:#C9A86A; margin:0;">Tirupati</h2><p>Made with ❤️</p></div>
+</div>
+<a href="/shop/" style="background:black; color:white; padding:14px 30px; text-decoration:none; border-radius:8px; display:inline-block; margin-top:40px; font-weight:bold;">Explore Collection →</a>
+</section>
+
+<footer style="background:black; color:white; text-align:center; padding:20px; margin-top:50px;">© 2026 VASTRA - Built with ❤️ in Tirupati</footer>
+
+<script>
+let cartObj = JSON.parse(localStorage.getItem('cart')||'{}');
+let el=document.getElementById('cart-count'); if(el) el.innerText=Object.keys(cartObj).length;
+</script>
+</body>
+</html>

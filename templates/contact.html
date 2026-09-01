@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Contact - VASTRA</title>
+</head>
+<body style="margin:0; font-family: Arial;">
+<nav style="padding:20px; background:white; text-align:center; border-bottom:1px solid #eee;">
+  <a href="/" style="text-decoration:none; color:#2c2c5a; font-weight:bold; font-size:24px; font-family:serif;">VASTRA</a>
+</nav>
+
+<div style="text-align:center; padding:50px 20px; background:#f5f0ff; min-height:80vh;">
+  <h2 style="font-family:serif; color:#2c2c5a;">Contact Us</h2>
+  <p style="color:#555;">Tirupati, AP | vastra.store@gmail.com | +91 98765 43210</p>
+
+  {% if messages %}
+    {% for m in messages %}
+      <p style="color:green; font-weight:bold; margin-top:20px;">{{ m }}</p>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST" style="margin-top:30px;">
+    {% csrf_token %}
+    <input type="text" name="message" placeholder="Your Message" required style="width:300px; padding:12px; border:1px solid #2c2c5a; border-radius:4px;"><br><br>
+    <button type="submit" style="background:#c9a9a6; border:none; padding:10px 30px; color:white; cursor:pointer; border-radius:4px;">Send Message</button>
+  </form>
+</div>
+</body>
+</html>

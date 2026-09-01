@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VASTRA - Wear Your Tradition</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:Poppins,sans-serif;background:#fdf6f3;}
+    .navbar{display:flex;justify-content:space-between;padding:15px 30px;background:white;border-bottom:1px solid #eee;position:sticky;top:0;z-index:100;}
+    .hero{display:flex;padding:60px 80px;align-items:center;background:#fdf8f0;gap:40px;}
+    .product-card{border:1px solid #eee;border-radius:12px;overflow:hidden;background:white;text-decoration:none;color:black;display:block;transition:.3s;}
+    .product-card:hover{transform:translateY(-5px);box-shadow:0 10px 20px rgba(0,0,0,.08);}
+    @media(max-width:768px){.hero{flex-direction:column !important;padding:30px 20px !important;text-align:center;} .product-grid{grid-template-columns:repeat(2,1fr) !important;} .section{padding:25px 15px !important;}}
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div><b style="letter-spacing:2px;font-size:20px;">VASTRA</b> <span style="font-size:11px;color:#C9A86A;margin-left:5px;">The Fashion Store</span></div>
+  <div style="display:flex;gap:20px;align-items:center;">
+    <a href="{% url 'home' %}" style="font-weight:bold;color:#C9A86A;text-decoration:none;">Home</a>
+    <a href="{% url 'shop' %}" style="text-decoration:none;color:black;">Shop</a>
+    <a href="{% url 'my_orders' %}" style="text-decoration:none;color:black;">My Orders</a>
+    <a href="{% url 'wishlist' %}" style="text-decoration:none;color:black;">Wishlist 💗</a>
+    <a href="{% url 'cart' %}" style="text-decoration:none;color:black;font-weight:bold;">Cart (<span id="cart-count">0</span>)</a>
+    {% if request.session.customer_id %}
+    <a href="{% url 'profile' %}" style="text-decoration:none; color:black;">Hi, {{ request.session.customer_name }} 👋</a>
+    <a href="{% url 'logout' %}" style="background:black;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;">Logout</a>
+    {% else %}
+    <a href="{% url 'login' %}" style="background:#C9A86A;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;">Login</a>
+    {% endif %}
+  </div>
+</nav>
+
+<section class="hero">
+  <div style="flex:1;">
+    <h4 style="color:#C9A86A;letter-spacing:3px;font-size:13px;">NEW COLLECTION 2026</h4>
+    <h1 style="font-size:52px;font-family:'Playfair Display';line-height:1.1;">Tradition Woven<br>in Modern Style</h1>
+    <p style="color:#666;margin:15px 0;">Premium ethnic & modern wear crafted in Tirupati.</p>
+    <a href="{% url 'shop' %}" style="background:#C9A86A;color:white;padding:14px 32px;text-decoration:none;border-radius:8px;display:inline-block;font-weight:bold;">Shop Now →</a>
+  </div>
+  <div style="flex:1;"><img src="{% static 'images/hero.jpg' %}" style="width:100%;height:500px;object-fit:cover;border-radius:16px;" onerror="this.src='https://via.placeholder.com/600'"></div>
+</section>
+
+<section class="section" style="padding:50px 80px;">
+  <h2 style="text-align:center;font-family:'Playfair Display';font-size:36px;">Featured Collection ✨</h2>
+  <p style="text-align:center;color:gray;margin-bottom:30px;"></p>
+
+  <div class="product-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:22px;">
+    {% for product in featured_products %}
+    <a href="/product/{{ product.id }}/" class="product-card">
+      <div style="position:relative;">
+        <img src="/static/images/{{ product.image }}" style="width:100%;height:320px;object-fit:cover;" onerror="this.src='https://via.placeholder.com/300'">
+        {% if product.discount_percent > 0 %}
+        <span style="position:absolute;top:10px;left:10px;background:#c0392b;color:white;padding:5px 8px;border-radius:5px;font-size:11px;font-weight:bold;">{{ product.discount_percent }}% OFF</span>
+        {% endif %}
+      </div>
+      <div style="padding:12px;">
+        <h3 style="font-size:13px;line-height:1.4;height:38px;overflow:hidden;">{{ product.name }}</h3>
+        
+        <!-- IKKADA DB PRICE MUNI - 100% CORRECT -->
+        <div style="margin-top:8px;">
+          {% if product.discount_price and product.discount_percent > 0 %}
+            <b style="font-size:15px;color:#111;">₹{{ product.final_price }}</b>
+            <small style="text-decoration:line-through;color:gray;margin-left:6px;">₹{{ product.price }}</small>
+            <small style="color:green;font-weight:bold;margin-left:6px;">{{ product.discount_percent }}% OFF</small>
+          {% else %}
+            <b style="font-size:15px;color:#111;">₹{{ product.price }}</b>
+          {% endif %}
+        </div>
+
+      </div>
+    </a>
+    {% empty %}
+    <p style="grid-column:1/-1;text-align:center;"></p>
+    {% endfor %}
+  </div>
+
+  <div style="text-align:center;margin-top:35px;">
+    <a href="{% url 'shop' %}" style="background:black;color:white;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:bold;">View All Products →</a>
+  </div>
+</section>
+
+<footer style="background:black;color:white;text-align:center;padding:22px;margin-top:30px;">
+  <p>© 2026 VASTRA - Built with ❤️ in Tirupati</p>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  try{
+    let c=JSON.parse(localStorage.getItem('cart')||'{}');
+    document.getElementById('cart-count').innerText=Object.keys(c).length;
+  }catch(e){}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Order Success - VASTRA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{font-family:Arial, sans-serif; background:#f5f5f5; margin:0;}
+.card{max-width:550px; margin:30px auto; text-align:left; border:1px solid #ddd; padding:25px; background:white; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.07);}
+.btn{display:inline-block; padding:12px 22px; text-decoration:none; border-radius:6px; font-weight:bold;}
+</style>
+</head>
+<body style="text-align:center; padding-top:30px;">
+
+<h1 style="color:#2c5e1a;">🎉 Thank You {{ first_order.name }}!</h1>
+<h2>Order Placed Successfully!</h2>
+<p>Your order has been saved in VASTRA </p>
+
+<div class="card">
+  <p><b>Transaction ID:</b> <span style="background:#eee; padding:4px 10px; border-radius:5px; font-family:monospace; font-weight:bold; color:#C9A86A;">{{ txn_id }}</span></p>
+  <p><strong>Order Time:</strong> {{ first_order.created_at|date:"d M Y, h:i A" }}</p>
+  <p><b>Customer:</b> {{ first_order.name }} - {{ first_order.phone }}</p>
+  <p><b>Address:</b> {{ first_order.address }}, {{ first_order.pincode }}</p>
+  <hr style="border:none; border-top:1px dashed #ccc; margin:15px 0;">
+
+  <h4 style="margin:10px 0;">Items Ordered:</h4>
+  {% for o in orders %}
+  <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f0f0f0;">
+    <span><b>{{ o.product.name }}</b> <small style="background:black; color:white; padding:2px 6px; border-radius:8px; font-size:10px;">{{ o.size }}</small> x {{ o.quantity }}</span>
+    <span><b>₹{% widthratio o.price 1 o.quantity %}</b></span>
+  </div>
+  {% empty %}
+  <p>No items found!</p>
+  {% endfor %}
+
+  <hr style="border:none; border-top:2px solid #eee; margin:15px 0;">
+  <p><b>Total Qty:</b> {{ total_qty }} items</p>
+  <p><b>Payment:</b> {{ first_order.payment_method }} -
+    <span style="background:#fff3cd; color:#856404; padding:4px 10px; border-radius:12px; font-weight:bold; border:1px solid #ffeeba;">{{ first_order.payment_status }}</span>
+  </p>
+  <h3 style="margin-top:15px; color:#2c5e1a; font-size:22px;">Total Paid: ₹{{ total_paid }}</h3>
+</div>
+
+<div style="margin-top:25px; margin-bottom:40px;">
+<a href="/shop/" class="btn" style="background:black; color:white;">Continue Shopping</a>
+<a href="/my-orders/" class="btn" style="border:1px solid black; color:black; margin-left:10px; background:white;">View My Orders</a>
+</div>
+
+<script>
+let orderedIds = [];
+try {
+  orderedIds = JSON.parse('{{ ordered_ids|escapejs }}' || '[]');
+} catch(e){ orderedIds = []; }
+
+let fullCartObj = JSON.parse(localStorage.getItem('cart') || '{}');
+let fullCart = Object.values(fullCartObj);
+if(fullCart.length == 0){
+  fullCart = JSON.parse(localStorage.getItem('vastraCart') || '[]');
+}
+
+let remaining = fullCart.filter(item => {
+    let pid = String(item.id || item.product_id);
+    let psize = String(item.size || item.selectedSize || 'M');
+    return!orderedIds.some(o => String(o.id) === pid && String(o.size) === psize);
+});
+
+let remObj = {};
+remaining.forEach(it => {
+  let key = (it.id || it.product_id) + "_" + (it.size || 'M');
+  remObj[key] = it;
+});
+
+localStorage.setItem('cart', JSON.stringify(remObj));
+localStorage.setItem('vastraCart', JSON.stringify(remaining));
+localStorage.removeItem('selectedCart');
+localStorage.removeItem('vastraCheckout');
+localStorage.removeItem('checkoutData');
+
+let countEl = document.getElementById('cart-count');
+if(countEl) countEl.innerText = remaining.length;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,95 @@
+{% load static %}
+<!DOCTYPE html>
+<html><head><title>Shop - VASTRA</title>
+<style>.product-card{border:1px solid #eee; padding:10px; text-align:center; text-decoration:none; color:black; border-radius:8px;} .product-card img{width:100%; height:250px; object-fit:cover;}
+.wish-active{background:#ff3f6c !important; color:white !important;}
+</style>
+</head><body>
+<button id="menuBtn" onclick="toggleMenu()" style="display:none; font-size:22px; background:none; border:none; cursor:pointer;">☰</button>
+<nav style="display:flex; justify-content:space-between; padding:15px;"><b>VASTRA</b>
+<div><a href="/">Home</a> | <a href="/shop/">Shop</a> | <a href="/wishlist/">Wishlist❤️</a> | <a href="/cart/">cart</a> (<span id="cart-count">0</span>)</div></nav>
+<div id="mobileNav" style="display:none; flex-direction:column; background:white; padding:15px; border-top:1px solid #eee;">
+  <a href="{% url 'home' %}" style="padding:10px 0; text-decoration:none; color:black;">Home</a>
+  <a href="{% url 'shop' %}" style="padding:10px 0; text-decoration:none; color:black;">Shop</a>
+  <a href="{% url 'wishlist' %}" style="padding:10px 0; text-decoration:none; color:black;">Wishlist 💗</a>
+  <a href="{% url 'cart' %}" style="padding:10px 0; text-decoration:none; color:black;">Cart 🛒 (<span class="cart-count">0</span>)</a>
+  <a href="{% url 'login' %}" style="padding:10px 0; text-decoration:none; color:black;">Login</a>
+</div>
+
+<div id="notify" style="position:fixed; bottom:20px; right:20px; background:black; color:white; padding:12px 20px; border-radius:8px; display:none; z-index:9999;"></div>
+
+<div style="padding:15px; background:#f5f5f5; display:flex; gap:10px;">
+<input id="searchInput" onkeyup="searchProducts()" placeholder="Search Saree, T-Shirt..." style="padding:10px; flex:2;">
+<select onchange="filterByCategory(this.value)" style="padding:10px;"><option value="all">All</option><option value="men">Men</option><option value="women">Women</option></select>
+<select onchange="sortProducts(this.value)" style="padding:10px;"><option value="">Sort</option><option value="low-high">Low to High</option><option value="high-low">High to Low</option></select>
+</div>
+
+<div id="shop-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; padding:15px;">
+  {% for product in products %}
+  <div class="product-card" data-name="{{product.name}}" data-category="{{product.category}}" style="border:1px solid #e0e0e0; border-radius:8px; overflow:hidden; background:white;">
+    
+    <a href="/product/{{ product.id }}/" style="text-decoration:none; color:black; display:block;">
+      <img src="/static/images/{{ product.image }}" style="width:100%; height:220px; object-fit:cover; display:block;">
+      <div style="padding:10px;">
+        <h4 style="font-size:14px; margin:5px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ product.name }}</h4>
+        <p style="margin:5px 0;">
+          {% if product.discount_price %}
+          <span style="font-weight:bold; font-size:14px;">₹{{ product.discount_price }}</span>
+          <span style="text-decoration:line-through; color:gray; font-size:12px; margin-left:5px;">₹{{ product.price }}</span>
+          <span style="color:green; font-size:12px; font-weight:bold; margin-left:5px;">{{ product.discount_percent }}% OFF</span>
+          {% else %}
+          <span style="font-weight:bold;">₹{{ product.price }}</span>
+          {% endif %}
+        </p>
+      </div>
+    </a>
+
+    <div style="padding:0 10px 10px;">
+      <button onclick="toggleWish(this, '{{ product.id }}')" class="wish-btn" data-pid="{{ product.id }}" style="width:100%; padding:7px; border:1px solid #ff3f6c; color:#ff3f6c; background:white; cursor:pointer; border-radius:4px; font-size:13px;">
+        ❤️ Add to Wishlist
+      </button>
+    </div>
+
+  </div>
+  {% endfor %}
+</div>  
+
+<script>
+function showNotify(msg){
+  let n=document.getElementById('notify');
+  n.textContent=msg; n.style.display='block';
+  setTimeout(()=>n.style.display='none',2500);
+}
+
+function toggleWish(btn, pid){
+  btn.textContent = "⏳...";
+  fetch("/wishlist/toggle/"+pid+"/")
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.status === 'added'){
+      btn.textContent = "❤️ Wishlisted";
+      btn.classList.add('wish-active');
+      showNotify('Added to Wishlist ❤️');
+    } else {
+      btn.textContent = "🤍 Add to Wishlist";
+      btn.classList.remove('wish-active');
+      showNotify('Removed from Wishlist ❌');
+    }
+  })
+  .catch(()=>{
+    showNotify('Please Login First!');
+    window.location.href="/login/";
+  });
+}
+
+// Search & filter (nee old code)
+function searchProducts(){
+  let q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('.product-card').forEach(c=>{
+    let name=c.dataset.name.toLowerCase();
+    c.style.display = name.includes(q) ? 'block' : 'none';
+  });
+}
+</script>
+<script src="{% static 'js/main.js' %}"></script>
+</body></html>

@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head><title>Cart - VASTRA</title><link rel="stylesheet" href="{% static 'css/style.css' %}"></head>
+<body>
+<nav style="display:flex; justify-content:space-between; padding:15px; background:white; border-radius:10px; margin:10px;">
+<b>VASTRA</b>
+<div style="display:flex; gap:15px;">
+<a href="{% url 'home' %}" style="text-decoration:none; color:black;">Home</a> |
+<a href="{% url 'my_orders' %}" style="text-decoration:none; color:black;">My Orders</a> |
+<a href="{% url 'shop' %}" style="text-decoration:none; color:black;">Shop</a> |
+<a href="{% url 'wishlist' %}" style="text-decoration:none; color:black;">Wishlist ❤️</a> |
+<b>Cart <span id="cart-count">0</span></b>
+</div>
+</nav>
+
+<div style="max-width:800px; margin:40px auto; padding:20px; background:white; border-radius:12px;">
+<h1>Your Cart</h1>
+<div id="cart-items"></div>
+<div id="cart-total" style="margin-top:20px; font-size:22px; font-weight:bold; border-top:2px solid #C9A86A; padding-top:15px;"></div>
+<button onclick="clearCart()" style="margin-top:20px; padding:10px 20px; background:#333; color:white; border:none; cursor:pointer; border-radius:6px;">Clear Cart</button>
+<a href="{% url 'shop' %}" style="margin-left:15px; text-decoration:none;">← Continue Shopping</a>
+<button onclick="checkout()" style="margin-top:20px; padding:12px 25px; background:#2c5e1a; color:white; border:none; font-weight:bold; cursor:pointer; border-radius:6px; float:right;">Checkout</button>
+</div>
+
+<script>
+const products = JSON.parse('{{ products_json|escapejs}}');
+
+function getCartObj(){ return JSON.parse(localStorage.getItem('cart') || '{}'); }
+function cleanPrice(p){ return parseFloat(String(p||0).replace(/[^0-9.]/g,'')) || 0; }
+
+
+function fixName(name){
+  if(!name) return 'Product';
+  return name.replace(/\\u0027/g,"'").replace(/\\u0022/g,'"').replace(/\u0027/g,"'").replace(/&apos;/g,"'");
+}
+
+function loadCart(){
+  let cartObj = getCartObj();
+  let cart = Object.values(cartObj);
+  if(cart.length === 0){
+    let oldArr = JSON.parse(localStorage.getItem('vastraCart') || '[]');
+    if(oldArr.length > 0){
+      oldArr.forEach(it => { let k = it.id + "_" + (it.size || 'M'); cartObj[k] = it; });
+      localStorage.setItem('cart', JSON.stringify(cartObj));
+      cart = Object.values(cartObj);
+    }
+  }
+  let html = "";
+  cart.forEach((item, i)=>{
+    let q = parseInt(item.qty || item.quantity) || 1;
+    let price = cleanPrice(item.price);
+    let orig = cleanPrice(item.original_price);
+    let size = item.size || 'M';
+    let img = item.img || item.image || '';
+    if(img &&!img.startsWith('/') &&!img.startsWith('http')) img = '/static/images/' + img;
+    let name = fixName(item.name);
+    let key = item.id + "_" + size;
+
+    let discountHtml = "";
+    if(orig > price && orig > 0){
+      let perc = Math.round(((orig - price) / orig) * 100);
+      discountHtml = `<br><small style="text-decoration:line-through;color:gray;">MRP ₹${orig}</small> <small style="color:green;font-weight:bold;">${perc}% OFF</small> <small style="color:green;">Save ₹${orig-price}</small>`;
+    }
+
+    html += `
+    <div style="display:flex; gap:15px; border-bottom:1px solid #eee; padding:15px 0; align-items:center;">
+      <input type="checkbox" class="item-check" data-key="${key}" checked onchange="updateSelectedTotal()" style="width:18px;height:18px;">
+      <img src="${img}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;" onerror="this.src='https://via.placeholder.com/80?text=VASTRA'">
+      <div style="flex:1;">
+        <b>${name}</b><br>
+        <span style="background:black;color:white;padding:4px 10px;border-radius:10px;font-size:12px;display:inline-block;margin:5px 0;">Size: ${size}</span><br>
+        <b>₹${price}</b> ${discountHtml}<br>
+        Qty: <button onclick="changeQty('${key}', -1)" style="padding:2px 8px;">-</button>
+        <b style="margin:0 6px;">${q}</b>
+        <button onclick="changeQty('${key}', 1)" style="padding:2px 8px;">+</button>
+        <br><a href="#" onclick="removeItem('${key}');return false;" style="color:red;font-size:12px;">Remove</a>
+      </div>
+    </div>`;
+  });
+  document.getElementById('cart-items').innerHTML = html || "<p style='padding:20px;'>Cart Empty - <a href='/shop/'>Shop Now</a></p>";
+  localStorage.setItem('vastraCart', JSON.stringify(cart));
+  updateSelectedTotal();
+}
+
+function updateSelectedTotal(){
+  let cartObj = getCartObj();
+  let cart = Object.values(cartObj);
+  let checks = document.querySelectorAll('.item-check');
+  let total = 0, totalMrp = 0, count = 0, sel = [];
+
+  if(checks.length==0){
+    cart.forEach(it=>{ total+=cleanPrice(it.price)*(parseInt(it.qty||it.quantity)||1); totalMrp+=cleanPrice(it.original_price||it.price)*(parseInt(it.qty||it.quantity)||1); sel.push(it); });
+    count = sel.length;
+  } else {
+    checks.forEach(c=>{
+      if(c.checked){ let it=cartObj[c.dataset.key]; if(it){ total+=cleanPrice(it.price)*(parseInt(it.qty||it.quantity)||1); totalMrp+=cleanPrice(it.original_price||it.price)*(parseInt(it.qty||it.quantity)||1); count++; sel.push(it); } }
+    });
+  }
+  let savings = totalMrp - total;
+  let html = `<h3>Total: ₹${total}</h3>`;
+  if(savings>0) html += `<p style="color:green; font-size:16px;">MRP: <s>₹${totalMrp}</s> | You Save: ₹${savings} 🎉</p>`;
+  html += `<p style="font-size:14px;">${count} items selected | ${cart.length} products in cart</p>`;
+  document.getElementById('cart-total').innerHTML = html;
+  document.getElementById('cart-count').innerText = cart.length;
+  localStorage.setItem('selectedCart', JSON.stringify(sel));
+  localStorage.setItem('vastraCheckout', JSON.stringify(sel.length? sel : cart));
+}
+
+function changeQty(key, d){
+  let cartObj = getCartObj(); if(!cartObj[key]) return;
+  cartObj[key].qty = (parseInt(cartObj[key].qty || cartObj[key].quantity)||1) + d;
+  if(cartObj[key].qty < 1) cartObj[key].qty = 1;
+  cartObj[key].quantity = cartObj[key].qty;
+  localStorage.setItem('cart', JSON.stringify(cartObj)); loadCart();
+}
+function removeItem(key){ let cartObj=getCartObj(); delete cartObj[key]; localStorage.setItem('cart', JSON.stringify(cartObj)); loadCart(); }
+function clearCart(){ if(confirm("Clear cart?")){ localStorage.removeItem('vastraCart'); localStorage.removeItem('cart'); localStorage.removeItem('selectedCart'); localStorage.removeItem('vastraCheckout'); loadCart(); } }
+function checkout(){
+  let sel = JSON.parse(localStorage.getItem('selectedCart') || '[]');
+  if(sel.length==0) sel = Object.values(getCartObj());
+  if(sel.length==0){ alert("Cart empty!"); return; }
+  localStorage.setItem('vastraCheckout', JSON.stringify(sel));
+  window.location.href = "/checkout/";
+}
+loadCart();
+</script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Orders - VASTRA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body{font-family:Arial; background:#f5f5f5; margin:0;}
+        nav{background:white; padding:15px; display:flex; justify-content:space-between; border-bottom:1px solid #ddd; position:sticky; top:0; z-index:10;}
+       .order-box{background:white; max-width:850px; margin:20px auto; border-radius:12px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.08); border-left:4px solid #C9A86A;}
+       .badge{padding:5px 12px; border-radius:20px; font-weight:bold; font-size:12px; border:1px solid;}
+    </style>
+</head>
+<body>
+
+<nav>
+<b>VASTRA</b>
+<div>
+<a href="/">Home</a> | <a href="/shop/">Shop</a> | <a href="/my-orders/"><b> My Orders</b></a> | <a href="/cart/">Cart</a>
+</div>
+</nav>
+
+<h1 style="text-align:center; margin-top:20px;">My Orders 🛍️</h1>
+
+{% for group in grouped %}
+<div class="order-box">
+<h3 style="margin:0 0 8px 0;">Order #{{ forloop.revcounter }} - {{ group.first_order.created_at|date:"d M Y - h:i A" }}</h3>
+<p style="margin:5px 0; font-size:14px;">
+<b>Txn ID:</b> <span style="background:#eee; padding:3px 8px; border-radius:5px; font-family:monospace;">{{ group.txn_id }}</span> |
+<b>Payment:</b> {{ group.first_order.payment_method }}
+</p>
+
+{% if group.first_order.payment_status == 'Delivered' %}
+<span class="badge" style="background:#d4edda; color:#155724; border-color:#c3e6cb;">✅ Delivered{% if group.first_order.delivered_at %} - {{ group.first_order.delivered_at|date:"d M Y - h:i A" }}{% endif %}</span>
+<div style="margin-top:10px; font-size:13px; background:#d4edda; padding:10px; border-radius:6px; color:#155724; border-left:3px solid #155724;">
+✅ <b>Delivered on:</b> {{ group.first_order.delivered_at|date:"d M Y, h:i A" }}<br>
+🚚 Shipped was: {{ group.first_order.shipped_at|date:"d M Y, h:i A" }}
+</div>
+{% elif group.first_order.payment_status == 'Shipped' %}
+<span class="badge" style="background:#cce5ff; color:#004085; border-color:#b8daff;">🚚 Shipped{% if group.first_order.shipped_at %} - {{ group.first_order.shipped_at|date:"d M Y - h:i A" }}{% endif %}</span>
+<div style="margin-top:10px; font-size:13px; background:#e7f3ff; padding:10px; border-radius:6px; color:#004085; border-left:3px solid #004085;">
+🚚 <b>Shipped on:</b> {{ group.first_order.shipped_at|date:"d M Y, h:i A" }}<br>
+📦 <b>Expected Delivery:</b> {% if group.first_order.delivered_at %}{{ group.first_order.delivered_at|date:"d M Y, h:i A" }}{% else %}Tomorrow by 6 PM{% endif %}
+</div>
+{% else %}
+<span class="badge" style="background:#fff3cd; color:#856404; border-color:#ffeeba;">⏳ {{ group.first_order.payment_status }}</span>
+<p style="font-size:13px; color:#856404; margin:8px 0 0 0;">📦 Order confirmed! Packing in progress...</p>
+{% endif %}
+
+<!-- RETURN STATUS - PROFESSIONAL -->
+{% if group.return_status == 'Requested' %}
+<div style="margin-top:12px; background:#fff3cd; padding:10px; border-radius:6px; border-left:4px solid #ffc107; font-size:13px;">
+🔄 <b>Return Requested</b> - Reason: {{ group.return_request.reason }} <br>
+<small>Your request is under review. You will receive an update within 24 hours.</small>
+</div>
+{% elif group.return_status == 'Approved' %}
+<div style="margin-top:12px; background:#d4edda; padding:10px; border-radius:6px; border-left:4px solid #28a745; font-size:13px; color:#155724;">
+✅ <b>Return Approved!</b> - Pickup will be scheduled within 24 hours<br>
+<small>Reason: {{ group.return_request.reason }}</small>
+</div>
+{% elif group.return_status == 'Picked' %}
+<div style="margin-top:12px; background:#cce5ff; padding:10px; border-radius:6px; border-left:4px solid #007bff; font-size:13px; color:#004085;">
+📦 <b>Product Picked Up!</b> - Courier has collected your product<br>
+<small>It will reach our warehouse within 1-2 days. Refund will be initiated after quality check.</small>
+</div>
+{% elif group.return_status == 'Returned' %}
+<div style="margin-top:12px; background:#e2e3e5; padding:10px; border-radius:6px; border-left:4px solid #6c757d; font-size:13px;">
+🏭 <b>Product Received at Warehouse!</b> - Under quality inspection<br>
+<small>Refund will be processed within 24 hours after inspection.</small>
+</div>
+{% elif group.return_status == 'Refunded' %}
+<div style="margin-top:12px; background:#d4edda; padding:15px; border-radius:8px; border-left:5px solid #28a745; font-size:14px; color:#155724; font-weight:bold; border: 2px solid #28a745;">
+💰 <b>Refund Completed! ₹{{ group.total }} has been credited to your original payment method!</b><br>
+<div style="font-weight:normal; margin-top:6px; font-size:13px;">
+✅ Refund Date: {{ group.return_request.updated_at|date:"d M Y, h:i A" }}{% if not group.return_request.updated_at %}{{group.first_order.delivered_at|date:"d M Y, h:i A"}}{% endif %} <br>
+💳 Payment Mode: {{ group.first_order.payment_method }}<br>
+<small>Amount will reflect in your account within 2-3 hours. Reason: {{ group.return_request.reason }}</small>
+</div>
+</div>
+{% elif group.return_status == 'Rejected' %}
+<div style="margin-top:12px; background:#f8d7da; padding:10px; border-radius:6px; border-left:4px solid #dc3545; font-size:13px; color:#721c24;">
+❌ <b>Return Rejected</b> - {{ group.return_request.reason }}<br>
+<small>Please contact support for more details.</small>
+</div>
+{% endif %}
+
+<p style="font-size:13px; background:#fafafa; padding:10px; border-radius:6px; margin-top:12px;"><b>Address:</b> {{ group.first_order.name }}, {{ group.first_order.address }}, {{ group.first_order.pincode }} - Ph: {{ group.first_order.phone }}</p>
+<hr style="border:none; border-top:1px dashed #ddd;">
+
+{% for item in group.items %}
+<div style="display:flex; gap:15px; margin:14px 0; align-items:center; justify-content:space-between;">
+    {% if item.product %}
+        {% if item.product.image %}
+        <img src="/static/images/{{ item.product.image }}" width="70" height="85" style="border-radius:8px; object-fit:cover; border:1px solid #eee;">
+        {% else %}
+        <div style="width:70px; height:85px; background:#eee; border-radius:8px;"></div>
+        {% endif %}
+        <div style="flex:1;">
+          <b>{{ item.product.name }}</b> - <span style="background:black; color:white; padding:2px 8px; border-radius:10px; font-size:11px;">Size: {{ item.size }}</span><br>
+          <span style="font-size:14px;">Qty: {{ item.quantity }} x ₹{{ item.price }} = <b style="color:#2c5e1a;">₹{% widthratio item.price 1 item.quantity %}</b></span>
+        </div>
+        <div>
+          {% if item.product.id in reviewed_ids %}
+          <span style="background:#d1fae5;color:#065f46;padding:7px 14px;border-radius:20px;font-size:11px;font-weight:bold; border:1px solid #a7f3d0; white-space:nowrap;">✅ Reviewed</span>
+          {% else %}
+          <a href="/review/{{ item.product.id }}/" style="background:#111;color:#fff;padding:7px 14px;border-radius:20px;text-decoration:none;font-size:11px;font-weight:bold; white-space:nowrap;">⭐ Rate</a>
+          {% endif %}
+        </div>
+    {% else %}
+        <div style="flex:1;">
+          <b>Order #{{ item.id }}</b> - Size: {{ item.size }} | Qty: {{ item.quantity }} = <b>₹{{ item.total_amount }}</b>
+        </div>
+    {% endif %}
+</div>
+{% endfor %}
+
+  <hr style="border:none; border-top:1px solid #eee;">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="margin:0;">Total Qty: {{ group.total_qty }} | Total Paid: <span style="color:#2c5e1a;">₹{{ group.total }}</span></h3>
+    <span style="font-size:12px; color:gray;">{{ group.first_order.created_at|date:"d/m/Y" }}</span>
+  </div>
+  <div style="margin-top:12px; text-align:right; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+    <a href="/invoice/{{ group.txn_id }}/" style="background:#000; color:#fff; padding:8px 16px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:13px;">🧾 Download Invoice</a>
+
+    {% if group.first_order.payment_status == 'Delivered' %}
+      {% if group.return_status == 'Requested' %}
+        <span style="background:#fff3cd; color:#856404; padding:8px 16px; border-radius:6px; font-size:13px; font-weight:bold; border:1px solid #ffeeba;">🔄 Return Requested</span>
+      {% elif group.return_status == 'Approved' %}
+        <span style="background:#d4edda; color:#155724; padding:8px 16px; border-radius:6px; font-size:13px; font-weight:bold; border:1px solid #c3e6cb;">✅ Approved - Pickup Scheduled</span>
+      {% elif group.return_status == 'Picked' %}
+        <span style="background:#cce5ff; color:#004085; padding:8px 16px; border-radius:6px; font-size:13px; font-weight:bold; border:1px solid #b8daff;">📦 Picked Up</span>
+      {% elif group.return_status == 'Returned' %}
+        <span style="background:#e2e3e5; color:#383d41; padding:8px 16px; border-radius:6px; font-size:13px; font-weight:bold;">🏭 At Warehouse</span>
+      {% elif group.return_status == 'Refunded' %}
+        <span style="background:#000; color:#2ecc71; padding:8px 16px; border-radius:6px; font-size:13px; font-weight:bold; border:1px solid #2ecc71;">💰 Refunded ₹{{ group.total }}</span>
+      {% elif group.return_status == 'Rejected' %}
+        <span style="background:#f8d7da; color:#721c24; padding:8px 16px; border-radius:6px; font-size:13px; font-weight:bold; border:1px solid #f5c6cb;">❌ Rejected</span>
+      {% else %}
+        <a href="/return/{{ group.first_order.id }}/" style="background:#ffc107; color:#000; padding:8px 16px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block; font-size:13px;">↩️ Return</a>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% empty %}
+<div style="text-align:center; background:white; max-width:500px; margin:50px auto; padding:40px; border-radius:12px;">
+  <p style="font-size:50px;">📦</p>
+  <p>No orders yet!</p>
+  <a href="/shop/" style="background:black; color:white; padding:12px 25px; text-decoration:none; border-radius:6px; display:inline-block; margin-top:10px;">Shop Now</a>
+</div>
+{% endfor %}
+
+<script>
+localStorage.removeItem('vastraCheckout');
+localStorage.removeItem('selectedCart');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wishlist - VASTRA</title>
+<style>
+body{font-family:Poppins, Arial; background:#fdf6f3; margin:0; padding:20px;}
+nav{display:flex; justify-content:space-between; background:white; padding:15px 25px; border-radius:10px; margin-bottom:20px;}
+.card{border:1px solid #eee; background:white; padding:12px; border-radius:10px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.btn{border:none; padding:9px; width:100%; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:6px; display:block; text-decoration:none; text-align:center; box-sizing:border-box;}
+</style>
+</head>
+<body>
+
+<nav>
+<b>VASTRA <span style="font-size:11px; color:#C9A86A;">The Fashion Store</span></b>
+<div style="display:flex; gap:15px;">
+<a href="/" style="text-decoration:none; color:black;">Home</a> |
+<a href="/shop/" style="text-decoration:none; color:black;">Shop</a> |
+<a href="/cart/" style="text-decoration:none; color:black;">Cart (<span id="cart-count">0</span>)</a>
+</div>
+</nav>
+
+<h2 style="text-align:center;">My Wishlist ❤️ ({{ items.count }})</h2>
+
+<div id="notify" style="position:fixed; bottom:20px; right:20px; background:black; color:white; padding:12px 20px; border-radius:8px; display:none; z-index:9999;"></div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:15px; max-width:1100px; margin:20px auto;">
+
+{% for item in items %}
+<div class="card" id="wish-{{ item.product.id }}"
+     data-id="{{ item.product.id }}"
+     data-name="{{ item.product.name|escapejs }}"
+     data-price="{{ item.product.final_price }}"
+     data-orig="{{ item.product.price }}"
+     data-img="{{ item.product.image }}">
+
+  <a href="/product/{{ item.product.id }}/">
+    <img src="{% static 'images/' %}{{ item.product.image }}" style="width:100%; height:220px; object-fit:cover; border-radius:8px;" onerror="this.src='https://via.placeholder.com/220x280?text=VASTRA'">
+  </a>
+  <h4 style="margin:10px 0 5px 0; font-size:14px;">{{ item.product.name }}</h4>
+  <p style="margin:5px 0;"><b>₹{{ item.product.final_price }}</b> <small style="text-decoration:line-through; color:gray;">₹{{ item.product.price }}</small></p>
+
+  <button onclick="moveToCart(this)" class="btn" style="background:black; color:white;">Move to Cart 🛒</button>
+  <button onclick="removeWish('{{ item.product.id }}')" class="btn" style="background:#ffe0e0; color:#c0392b;">Remove ❌</button>
+</div>
+{% empty %}
+<div style="grid-column:1/-1; text-align:center; background:white; padding:40px; border-radius:12px;">
+  <p style="font-size:40px;">😢</p>
+  <h3>Your Wishlist is Empty!</h3>
+  <p>Go add some products!</p>
+  <br>
+  <a href="/shop/" style="background:black; color:white; padding:10px 20px; text-decoration:none; border-radius:6px;">Shop Now</a>
+</div>
+{% endfor %}
+
+</div>
+
+<div style="text-align:center; margin-top:20px;">
+<a href="/shop/" style="text-decoration:none; color:#8e6d5a; font-weight:bold;">← Continue Shopping</a>
+</div>
+
+<script>
+function showNotify(msg){
+  let n=document.getElementById('notify');
+  n.textContent=msg; n.style.display='block';
+  setTimeout(()=>n.style.display='none',2500);
+}
+
+function moveToCart(btn){
+  let card = btn.closest('.card');
+  let pid = card.dataset.id;
+  let pname = card.dataset.name;
+  let pprice = card.dataset.price;
+  let origPrice = card.dataset.orig;
+  let pimg = card.dataset.img;
+  let imgPath = "/static/images/" + pimg;
+
+  let cartObj = JSON.parse(localStorage.getItem('cart') || '{}');
+  let pkey = pid + "_M";
+
+  if(cartObj[pkey]){
+    cartObj[pkey].qty += 1;
+    cartObj[pkey].quantity = cartObj[pkey].qty;
+  } else {
+    cartObj[pkey] = { id: pid, product_id: pid, name: pname, price: pprice, original_price: origPrice, image: imgPath, img: imgPath, size: "M", qty: 1, quantity: 1 };
+  }
+
+  localStorage.setItem('cart', JSON.stringify(cartObj));
+  localStorage.setItem('vastraCart', JSON.stringify(Object.values(cartObj)));
+  localStorage.setItem('cartItems', JSON.stringify(Object.values(cartObj)));
+
+  showNotify(pname + " Moved to Cart 🛒");
+
+  fetch("/wishlist/toggle/"+pid+"/").then(()=>{
+    document.getElementById('wish-'+pid).style.display='none';
+    setTimeout(()=>{ window.location.href="/cart/"; }, 800);
+  });
+}
+
+function removeWish(pid){
+  fetch("/wishlist/toggle/"+pid+"/")
+.then(res=>res.json())
+.then(data=>{
+    showNotify('Removed from Wishlist ❌');
+    let el = document.getElementById('wish-'+pid);
+    if(el) el.remove();
+    setTimeout(()=>{ location.reload(); }, 600);
+  });
+}
+
+// Cart count
+try{
+  let c = JSON.parse(localStorage.getItem('cart') || '{}');
+  document.getElementById('cart-count').textContent = Object.keys(c).length;
+}catch(e){}
+</script>
+
+</body>
+</html>

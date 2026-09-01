@@ -1,0 +1,117 @@
+{% extends "admin/change_list.html" %}
+{% block content %}
+<div style="padding:20px; font-family:sans-serif; background:#f5f5f5; min-height:100vh;">
+<h2>📦 VASTRA - Grouped Orders</h2>
+<a href="/admin/store/order/?old=1" style="background:#6c757d; color:white; padding:8px 14px; border-radius:8px; text-decoration:none; font-size:13px; display:inline-block; margin:10px 0;">🔙 View Old List</a>
+<a href="/my-orders/" target="_blank" style="background:black; color:white; padding:8px 14px; border-radius:8px; text-decoration:none; font-size:13px; display:inline-block; margin:10px 5px;">🛍️ View Store Orders</a>
+<a href="/admin/store/returnrequest/" style="background:#ff6b00; color:white; padding:8px 14px; border-radius:8px; text-decoration:none; font-size:13px; display:inline-block; margin:10px 5px;">🔄 Return Requests</a>
+
+{% if grouped_orders %}
+  {% for txn, data in grouped_orders.items %}
+    {% with main_order=data.orders.0 %}
+    <div style="border:2px solid #ddd; border-radius:12px; padding:18px; margin-bottom:20px; background:white; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:15px;">
+        <div style="flex:1; min-width:280px;">
+          <b style="font-family:monospace; background:#fff3cd; padding:3px 8px; border-radius:5px;">Txn: {{ txn }}</b>
+          
+          <!-- ✅ RETURN STATUS BADGE ADDED -->
+          {% if data.return_request %}
+            {% if data.return_request.status == 'Requested' %}
+              <span style="background:#ff9800; color:white; padding:3px 10px; border-radius:12px; font-size:12px; margin-left:8px; font-weight:bold;">🔄 Return Requested</span>
+            {% elif data.return_request.status == 'Approved' %}
+              <span style="background:#28a745; color:white; padding:3px 10px; border-radius:12px; font-size:12px; margin-left:8px; font-weight:bold;">✅ Return Approved</span>
+            {% else %}
+              <span style="background:#dc3545; color:white; padding:3px 10px; border-radius:12px; font-size:12px; margin-left:8px; font-weight:bold;">❌ Return {{ data.return_request.status }}</span>
+            {% endif %}
+          {% endif %}
+          <br><br>
+          <b>👤 {{ main_order.name }}</b> | 📞 {{ main_order.phone }}<br>
+          📍 {{ main_order.address }} - <b>{{ main_order.pincode }}</b><br>
+          <small style="color:#666;">{{ main_order.created_at|date:"d M Y h:i A" }} | {{ main_order.payment_method }} {% if main_order.transaction_id %}| UTR: {{ main_order.transaction_id }}{% endif %}</small>
+
+          <!-- ✅ RETURN REASON BOX -->
+          {% if data.return_request %}
+          <div style="margin-top:12px; background:#fff3cd; border:1px solid #ffc107; padding:10px; border-radius:8px;">
+            <b style="color:#856404; font-size:13px;">🔄 Return Reason:</b><br>
+            <span style="font-size:13px;">{{ data.return_request.reason }} - {{ data.return_request.description }}</span><br>
+            <small style="color:#666;">By: {{ main_order.name }}</small>
+          </div>
+          {% endif %}
+        </div>
+        <div style="text-align:right; min-width:220px;">
+          {% if main_order.payment_status == 'Delivered' %}
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+              <span style="background:#d4edda; color:#155724; padding:6px 14px; border-radius:20px; border:1px solid #c3e6cb; font-weight:bold;">✅ {{ main_order.payment_status }}</span>
+              {% if main_order.delivered_at %}
+              <small style="color:#155724; background:#d4edda; padding:4px 10px; border-radius:10px; border:1px solid #c3e6cb;">Delivered: {{ main_order.delivered_at|date:"d M Y h:i A" }}</small>
+              {% endif %}
+            </div>
+          {% elif main_order.payment_status == 'Shipped' %}
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+              <span style="background:#cce5ff; color:#004085; padding:6px 14px; border-radius:20px; border:1px solid #b8daff; font-weight:bold;">🚚 {{ main_order.payment_status }}</span>
+              {% if main_order.shipped_at %}
+              <small style="color:#004085; background:#cce5ff; padding:4px 10px; border-radius:10px; border:1px solid #b8daff;">Shipped: {{ main_order.shipped_at|date:"d M Y h:i A" }}</small>
+              {% endif %}
+            </div>
+          {% else %}
+            <span style="background:#fff3cd; color:#856404; padding:6px 14px; border-radius:20px; border:1px solid #ffeeba; font-weight:bold;">⏳ {{ main_order.payment_status|default:"pending" }}</span>
+          {% endif %}
+          
+          <div style="margin-top:12px; font-weight:bold; font-size:20px; color:#2c5e1a;">₹{{ data.group_total }}</div>
+          <small style="color:gray;">{{ data.orders|length }} items</small>
+
+          {% if main_order.payment_status == 'Delivered' or main_order.payment_status == 'Cancelled' %}
+            <div style="margin-top:10px; font-size:12px; color:green;">✓ Completed Order</div>
+          {% else %}
+          <form method="POST" style="margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+            {% csrf_token %}
+            <input type="hidden" name="txn_id" value="{{ txn }}">
+            <div style="display:flex; gap:6px; justify-content:flex-end; width:100%;">
+              <select name="new_status" id="status-{{ forloop.counter }}" style="padding:6px; border-radius:6px; border:1px solid #ccc; font-size:13px; flex:1;" onchange="var v=this.value; document.getElementById('ship-box-{{ forloop.counter }}').style.display=(v=='Shipped'?'block':'none'); document.getElementById('del-box-{{ forloop.counter }}').style.display=(v=='Delivered'?'block':'none');">
+                <option value="pending" {% if main_order.payment_status == 'pending' %}selected{% endif %}>pending</option>
+                <option value="Shipped" {% if main_order.payment_status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+              <button type="submit" style="background:#007bff; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-weight:bold;">Update</button>
+            </div>
+            
+            <div id="ship-box-{{ forloop.counter }}" style="display:none; background:#e7f3ff; padding:8px; border-radius:6px; border:1px solid #b8daff; width:100%; text-align:left;">
+              <small style="font-weight:bold; color:#004085;">🚚 Shipped at:</small><br>
+              <input type="datetime-local" name="shipped_at" style="padding:5px; border-radius:4px; border:1px solid #ccc; width:100%; margin-top:4px;">
+              <small style="color:#666;">Ex: 2026-08-30 06:00</small>
+            </div>
+            
+            <div id="del-box-{{ forloop.counter }}" style="display:none; background:#d4edda; padding:8px; border-radius:6px; border:1px solid #c3e6cb; width:100%; text-align:left;">
+              <small style="font-weight:bold; color:#155724;">✅ Delivered at:</small><br>
+              <input type="datetime-local" name="delivered_at" style="padding:5px; border-radius:4px; border:1px solid #ccc; width:100%; margin-top:4px;">
+            </div>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      
+      <hr style="border:none; border-top:1px dashed #ddd; margin:15px 0;">
+      
+      <div style="background:#fafafa; padding:12px; border-radius:8px; border:1px solid #f0f0f0;">
+        {% for order in data.orders %}
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed #e0e0e0; font-size:14px;">
+            <span>
+              {% if order.product.image %}<img src="/static/images/{{ order.product.image }}" style="width:35px; height:35px; object-fit:cover; border-radius:4px; vertical-align:middle; margin-right:8px;">{% endif %}
+              👕 {{ order.product.name }} - <span style="background:black; color:white; padding:2px 7px; border-radius:10px; font-size:11px;">{{ order.size}}</span>
+            </span>
+            <span>Qty: {{ order.quantity }} x ₹{{ order.product.final_price }} = <b>₹{{ order.total_amount }}</b></span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endwith %}
+  {% endfor %}
+{% else %}
+  <div style="text-align:center; background:white; padding:40px; border-radius:12px; margin-top:20px;">
+    <p style="font-size:40px;">📭</p>
+    <p>No orders yet!</p>
+  </div>
+{% endif %}
+</div>
+{% endblock %}
