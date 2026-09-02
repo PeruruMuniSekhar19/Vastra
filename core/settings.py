@@ -1,8 +1,5 @@
-"""
-Django settings for core project.
-Hosting Ready Settings 
-"""
 from pathlib import Path
+import dj_database_url
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -53,16 +50,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'vastra_db',
-        'USER': 'root',
-        'PASSWORD': 'muni',
-        'HOST': 'localhost',
-        'PORT': '3306',
+
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'vastra_db',
+            'USER': 'root',
+            'PASSWORD': 'muni',
+            'HOST': 'localhost',
+            'PORT': '3306',
+        }
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
