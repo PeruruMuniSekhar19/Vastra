@@ -85,8 +85,3 @@ MEDIA_URL='/media/'
 MEDIA_ROOT=BASE_DIR/'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-try:
-    exec(open(BASE_DIR/'create_admin.py').read())
-except Exception as e:
-    print(f"Admin auto-create skip: {e}")
