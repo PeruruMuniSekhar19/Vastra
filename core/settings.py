@@ -5,7 +5,10 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-h=bd47b27r-3y(%ccstartbld1x3*_gh&8axni$17qtlw-ow=i'
-DEBUG = False 
+
+DEBUG = os.environ.get('RENDER') != 'true'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 ALLOWED_HOSTS = ['*']  
 
